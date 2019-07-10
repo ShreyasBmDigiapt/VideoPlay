@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">VideoPlay</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="description_info">Info</string>
+    <string name="permission_request">This sample needs permission for camera, audio recording and internal storage.</string>
+    <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="title_activity_media_player">MediaPlayer</string>
+    <string name="title_activity_exo_player">ExoPlayer</string>
+    
+    
+    <string name="link">https://youtu.be/NaTIx7-HcL4</string>
+
+</resources>
