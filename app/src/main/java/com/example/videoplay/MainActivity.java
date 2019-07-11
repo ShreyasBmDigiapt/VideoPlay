@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -64,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
                     videoPermission();
                     return;
                 }
-                getSupportFragmentManager().beginTransaction().add(R.id.mainFrame, new Camera2VideoFragment()).commit();
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                transaction.add(R.id.mainFrame, new Camera2VideoFragment());
+                transaction.addToBackStack("camera");
+                transaction.commit();
             }
         });
 
@@ -115,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
                 cursor.close();
             }
         }
-
-
     }
 
 
