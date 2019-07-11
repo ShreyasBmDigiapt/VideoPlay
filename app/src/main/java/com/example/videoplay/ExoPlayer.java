@@ -148,6 +148,7 @@ public class ExoPlayer extends AppCompatActivity {
             public void onPlayerStateChanged(boolean playWhenReady, int state) {
 
                 playReady = playWhenReady;
+                Log.d("state", "onPlayerStateChanged: "+state+"  "+player.getDuration());
 
                 switch (state) {
                     case 1:
@@ -160,9 +161,13 @@ public class ExoPlayer extends AppCompatActivity {
                         break;
 
                     case 4:
-                        mBtnExoControl.setImageResource(R.drawable.exo_play);
-                        player.seekTo(0);
-                        player.setPlayWhenReady(false);
+                        Log.d("statee", "onPlayerStateChanged: "+((int)player.getCurrentPosition() - (int)player.getDuration())/10);
+                        if ((((int)player.getCurrentPosition() - (int)player.getDuration())/10) == 0) {
+                            mBtnExoControl.setImageResource(R.drawable.exo_play);
+                            player.seekTo(0);
+                            player.setPlayWhenReady(false);
+                        }
+
                         break;
                 }
             }
@@ -215,12 +220,14 @@ public class ExoPlayer extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         Log.d("activity", "onPause: "+player.getCurrentPosition());
+        playbackPosition = player.getCurrentPosition();
         releasePlayer();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        releasePlayer();
         Log.d("activity", "onStop: ");
     }
 
@@ -238,7 +245,10 @@ public class ExoPlayer extends AppCompatActivity {
 
         mPlayerView.setPlayer(player);
         Log.d("position", "releasePlayer: "+playbackPosition);
-        player.seekTo(playbackPosition);
+        if (playbackPosition != 0) {
+            player.seekTo(playbackPosition);
+            player.setPlayWhenReady(true);
+        }
         Log.d("position", "releasePlayer: "+playbackPosition);
         exoControls();
         playerEventListener();
