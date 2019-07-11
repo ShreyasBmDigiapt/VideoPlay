@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         mBtnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (! hasPermissionsGranted(VIDEO_PERMISSIONS)) {
+                if (!hasPermissionsGranted(VIDEO_PERMISSIONS)) {
                     videoPermission();
                     return;
                 }
@@ -71,14 +71,13 @@ public class MainActivity extends AppCompatActivity {
         mBtnGallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (! hasPermissionsGranted(VIDEO_PERMISSIONS)) {
+                if (!hasPermissionsGranted(VIDEO_PERMISSIONS)) {
                     videoPermission();
                     return;
                 }
-                Intent intent = new Intent();
-                intent.setType("video/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"),GALLERY_REQUEST_CODE);
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*");
+                startActivityForResult(Intent.createChooser(intent, "Select Picture"), GALLERY_REQUEST_CODE);
 
             }
         });
@@ -89,17 +88,37 @@ public class MainActivity extends AppCompatActivity {
 
 
     // To handle when an image is selected from the browser, add the following to your Activity
+
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (resultCode == RESULT_OK) {
-
-            if (requestCode == 1) {
-
-                Log.d(TAG, "onActivityResult: real   "+ RealPathUtil.getRealPathFromURI_API19(getApplicationContext(), data.getData()));
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            Uri galleyPathUri = data.getData();
+            String galleryPath = getPath(galleyPathUri);
+            if (galleryPath != null) {
+                Intent galleryIntent = new Intent(MainActivity.this, ExoPlayer.class);
+                galleryIntent.putExtra("path", galleryPath);
+                startActivity(galleryIntent);
             }
         }
     }
+
+    private String getPath(Uri galleyPathUri) {
+        Cursor cursor = null;
+        try {
+            String[] projections = {MediaStore.Video.Media.DATA};
+            cursor = getContentResolver().query(galleyPathUri, projections, null, null, null);
+            int column_index = cursor.getColumnIndex(MediaStore.Video.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        }finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+
+    }
+
 
     // And to convert the image URI to the direct file system path of the image file
 
@@ -118,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
     private void videoPermission() {
         if (shouldShowRequest(VIDEO_PERMISSIONS)) {
             new ConfirmationDialog(this).show();
-        }else {
+        } else {
             requestPermissions(VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS);
         }
     }
@@ -138,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-        private boolean hasPermissionsGranted(String[] permissions) {
+    private boolean hasPermissionsGranted(String[] permissions) {
         for (String permission : permissions) {
             if (ActivityCompat.checkSelfPermission(this, permission)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -149,8 +168,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    public  class ConfirmationDialog extends AlertDialog {
+    public class ConfirmationDialog extends AlertDialog {
 
         protected ConfirmationDialog(@NonNull Context context) {
             super(context);
@@ -173,37 +191,4 @@ public class MainActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
         }
     }
-
-
-    public static class RealPathUtil {
-
-        @SuppressLint("NewApi")
-        public static String getRealPathFromURI_API19(Context context, Uri uri) {
-            String filePath = "";
-            String wholeID = DocumentsContract.getDocumentId(uri);
-
-            // Split at colon, use second item in the array
-            String id = wholeID.split(":")[1];
-
-            String[] column = {MediaStore.Images.Media.DATA};
-
-            // where id is equal to
-            String sel = MediaStore.Images.Media._ID + "=?";
-
-            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    column, sel, new String[]{id}, null);
-
-            int columnIndex = cursor.getColumnIndex(column[0]);
-            Log.d(TAG, "getRealPathFromURI_API19: idx"+ columnIndex);
-
-            if (cursor.moveToFirst()) {
-                filePath = cursor.getString(columnIndex);
-            }
-            cursor.close();
-            Log.d(TAG, "getRealPathFromURI_API19: "+ filePath.isEmpty());
-            return filePath;
-        }
-    }
-
-
 }

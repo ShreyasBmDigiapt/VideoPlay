@@ -613,7 +613,7 @@ public class Camera2VideoFragment extends Fragment {
 
     private void exoPlayerActvity(String mNextVideoAbsolutePath) {
         Intent intent = new Intent(getActivity(), ExoPlayer.class);
-        intent.putExtra("videoPath", mNextVideoAbsolutePath);
+        intent.putExtra("path", mNextVideoAbsolutePath);
         startActivity(intent);
     }
 

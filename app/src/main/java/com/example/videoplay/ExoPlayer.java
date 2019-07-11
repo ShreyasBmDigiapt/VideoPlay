@@ -52,7 +52,7 @@ public class ExoPlayer extends AppCompatActivity {
 
         mPlayerView = findViewById(R.id.exoPlayerView);
         Intent intent = getIntent();
-        uri1 = intent.getStringExtra("videoPath");
+        uri1 = intent.getStringExtra("path");
         Log.d(TAG, "onCreate: "+ uri1);
     }
 
