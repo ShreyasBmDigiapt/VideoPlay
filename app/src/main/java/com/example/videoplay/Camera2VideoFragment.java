@@ -3,7 +3,9 @@ package com.example.videoplay;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.RectF;
@@ -20,6 +22,7 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -29,9 +32,12 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Chronometer;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import java.io.File;
@@ -55,6 +61,12 @@ public class Camera2VideoFragment extends Fragment {
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
 
     private static final String TAG = "Camera2VideoFragment";
+    private AlertDialog.Builder builder;
+    private int currentOrientation;
+    private Chronometer mCam_cMeter;
+    private Runnable runnable;
+    private Handler handler;
+    private long chromometroBaseTime;
 
     static {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -78,7 +90,7 @@ public class Camera2VideoFragment extends Fragment {
     /**
      * Button to record video
      */
-    private Button mButtonVideo;
+    private ImageButton mButtonVideo;
 
     /**
      * A reference to the opened {@link android.hardware.camera2.CameraDevice}.
@@ -205,9 +217,19 @@ public class Camera2VideoFragment extends Fragment {
      * @param choices The list of available sizes
      * @return The video size
      */
+//    private static Size chooseVideoSize(Size[] choices) {
+//        for (Size size : choices) {
+//            if (size.getWidth() == size.getHeight() * 4 / 3 && size.getWidth() <= 1080) {
+//                return size;
+//            }
+//        }
+//        Log.e(TAG, "Couldn't find any suitable video size");
+//        return choices[choices.length - 1];
+//    }
     private static Size chooseVideoSize(Size[] choices) {
         for (Size size : choices) {
-            if (size.getWidth() == size.getHeight() * 4 / 3 && size.getWidth() <= 1080) {
+            // Note that it will pick only HD video size, you should create more robust solution depending on screen size and available video sizes
+            if (1920 == size.getWidth() && 1080 == size.getHeight()) {
                 return size;
             }
         }
@@ -231,9 +253,10 @@ public class Camera2VideoFragment extends Fragment {
         List<Size> bigEnough = new ArrayList<>();
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
+        double ratio = (double) h / w;
         for (Size option : choices) {
-            if (option.getHeight() == option.getWidth() * h / w &&
-                    option.getWidth() >= width && option.getHeight() >= height) {
+            double optionRatio = (double) (option.getHeight() / option.getWidth());
+            if (ratio == optionRatio) {
                 bigEnough.add(option);
             }
         }
@@ -243,35 +266,72 @@ public class Camera2VideoFragment extends Fragment {
             return Collections.min(bigEnough, new CompareSizesByArea());
         } else {
             Log.e(TAG, "Couldn't find any suitable preview size");
-            return choices[0];
+            return choices[1];
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_camera2_video, container, false);
+//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        View itemView = inflater.inflate(R.layout.fragment_camera2_video, container, false);
+        Log.d("fragmnet", "onCreateView: ");
+        return itemView;
     }
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
-        mButtonVideo = (Button) view.findViewById(R.id.video);
+        mButtonVideo = view.findViewById(R.id.video);
+        mCam_cMeter = view.findViewById(R.id.cam_cMeter);
+        builder = new AlertDialog.Builder(getContext());
+        handler = new Handler();
+
+        Log.d("fragmnet", "onViewCreated: ");
+
         mButtonVideo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                currentOrientation = getResources().getConfiguration().orientation;
                 if (mIsRecordingVideo) {
+
                     stopRecordingVideo();
                 } else {
-                    startRecordingVideo();
+                    if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+                        Log.d("playr", "onClick: ");
+                        startRecordingVideo();
+//                        chromometer();
+                        builder.create().dismiss();
+
+                    } else if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        mButtonVideo.setVisibility(View.GONE);
+                        Log.d("playr", "onClick: ");
+                        builder.setTitle("Alert").setMessage("Doesnt support LandScape mode").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                mButtonVideo.setVisibility(View.VISIBLE);
+                            }
+                        });
+                        builder.create().show();
+                    }
                 }
+//
             }
+
         });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Log.d("fragmnet", "onStart: ");
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("fragmnet", "onResume: ");
         startBackgroundThread();
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
@@ -543,15 +603,30 @@ public class Camera2VideoFragment extends Fragment {
                         @Override
                         public void run() {
                             // UI
-                            mButtonVideo.setText(R.string.stop);
+                            mButtonVideo.setImageResource(R.drawable.exo_pause_button_red);
                             mIsRecordingVideo = true;
 
                             // Start recording
                             mMediaRecorder.start();
+                            chromometroBaseTime = SystemClock.elapsedRealtime();
+                            Log.d("chromoTime", "run: "+chromometroBaseTime);
+                            mCam_cMeter.setVisibility(View.VISIBLE);
+                            mCam_cMeter.start();
+                            mCam_cMeter.setBase(chromometroBaseTime);
+                            {
+                                chromometer();
+                                handler.postDelayed(runnable, 200);
+                            }
+//                            mCam_cMeter.setBase(chromometroBaseTime);
+//                            mCam_cMeter.setVisibility(View.VISIBLE);
+//                            mCam_cMeter.start();
 
-                            Log.d(TAG, "run:123213 "+surfaces.size());
+                            Log.d(TAG, "run: ");
+
+                            Log.d(TAG, "run:123213 " + surfaces.size());
                         }
                     });
+
                 }
 
                 @Override
@@ -576,12 +651,15 @@ public class Camera2VideoFragment extends Fragment {
     }
 
     private void stopRecordingVideo() {
+        Log.d("stopa", "stopRecordingVideo: ");
         // UI
         mIsRecordingVideo = false;
-        mButtonVideo.setText(R.string.record);
+        mButtonVideo.setImageResource(R.drawable.exo_play_button_red);
         // Stop recording
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
+        if (mMediaRecorder != null) {
+            mMediaRecorder.stop();
+            mMediaRecorder.reset();
+        }
 
         Activity activity = getActivity();
         if (null != activity) {
@@ -590,11 +668,12 @@ public class Camera2VideoFragment extends Fragment {
             exoPlayerActvity(mNextVideoAbsolutePath);
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
+        Log.d("chromoTime", "stopRecordingVideo: "+mCam_cMeter.getText().toString());
         mNextVideoAbsolutePath = null;
+        mCam_cMeter.stop();
+        handler.removeCallbacks(runnable);
 //        startPreview();
     }
-
-
 
 
     /**
@@ -611,12 +690,37 @@ public class Camera2VideoFragment extends Fragment {
 
     }
 
-    private void exoPlayerActvity(String mNextVideoAbsolutePath) {
+    private void exoPlayerActvity(final String mNextVideoAbsolutePath) {
+
         Intent intent = new Intent(getActivity(), ExoPlayer.class);
         intent.putExtra("path", mNextVideoAbsolutePath);
         startActivity(intent);
+        getFragmentManager().popBackStackImmediate();
     }
 
+
+    private void chromometer() {
+        Log.d("chromoTime", "chromometer: "+(mCam_cMeter.getText().toString().equals("00:31")));
+
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                if (mCam_cMeter.getText().toString().equals("00:05")) {
+                    stopRecordingVideo();
+                    handler.removeCallbacks(runnable);
+
+
+                } else {
+//                    mCam_cMeter.start();
+//                    startRecordingVideo();
+                }
+                handler.postDelayed(runnable, 200);
+
+
+            }
+        };
+
+    }
 
 
 }

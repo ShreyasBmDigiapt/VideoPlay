@@ -3,24 +3,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Camera2VideoFragment">
+    tools:context=".Camera2VideoFragment"
+    android:clickable="true">
 
     <com.example.videoplay.AutoFitTextureView
         android:id="@+id/texture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"/>
 
-    <Button
-        android:id="@+id/video"
+    <Chronometer
+        android:id="@+id/cam_cMeter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/record"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/camerRL"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="50dp"/>
+        android:layout_marginBottom="20dp"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:background="#a3000000"
+        android:paddingHorizontal="2dp"/>
+
+   <RelativeLayout
+       android:id="@+id/camerRL"
+       android:layout_width="60dp"
+       android:layout_height="60dp"
+       android:layout_alignParentBottom="true"
+       android:layout_centerHorizontal="true"
+       android:layout_marginBottom="20dp"
+       android:background="@drawable/oval_button">
+
+       <ImageButton
+           android:id="@+id/video"
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:layout_centerVertical="true"
+           android:layout_centerHorizontal="true"
+           android:src="@drawable/exo_play_button_red"
+           android:scaleType="fitCenter"
+           android:background="@color/transparent"
+           android:padding="8dp"/>
+   </RelativeLayout>
 
 
 </RelativeLayout>

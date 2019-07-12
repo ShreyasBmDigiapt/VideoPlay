@@ -1,7 +1,10 @@
 package com.example.videoplay;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,6 +36,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.appcompat.widget.Toolbar;
@@ -44,6 +48,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -90,9 +95,29 @@ public class ExoPlayer extends AppCompatActivity {
         Log.d(TAG, "onCreate: " + uri1);
 
         handler = new Handler();
-        handler.removeCallbacks(updatePlayer);
 
+//        handler.removeCallbacks(updatePlayer);
 
+        Log.d("activity", "onCreate: ");
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//            Toast.makeText(this, "portraitMode", Toast.LENGTH_SHORT).show();
+        }else if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Alert").setMessage("Doesnt support LandScape mode").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            });
+            builder.create().show();
+        }
     }
 
     private void seekBarPosition() {
@@ -139,6 +164,8 @@ public class ExoPlayer extends AppCompatActivity {
                 handler.postDelayed(updatePlayer, delay);
             }
         };
+
+
     }
 
 
@@ -148,7 +175,7 @@ public class ExoPlayer extends AppCompatActivity {
             public void onPlayerStateChanged(boolean playWhenReady, int state) {
 
                 playReady = playWhenReady;
-                Log.d("state", "onPlayerStateChanged: "+state+"  "+player.getDuration());
+//                Log.d("state", "onPlayerStateChanged: " + state + "  " + player.getDuration());
 
                 switch (state) {
                     case 1:
@@ -161,19 +188,18 @@ public class ExoPlayer extends AppCompatActivity {
                         break;
 
                     case 4:
-                        Log.d("statee", "onPlayerStateChanged: "+((int)player.getCurrentPosition() - (int)player.getDuration())/10);
-                        if ((((int)player.getCurrentPosition() - (int)player.getDuration())/10) == 0) {
-                            mBtnExoControl.setImageResource(R.drawable.exo_play);
+                        Log.d("statee", "onPlayerStateChanged: " + ((int) player.getCurrentPosition() - (int) player.getDuration()) / 10);
+                        if ((( player.getCurrentPosition() -  player.getDuration()) / 10) == 0) {
                             player.seekTo(0);
+                            mBtnExoControl.setImageResource(R.drawable.exo_play);
                             player.setPlayWhenReady(false);
                         }
-
                         break;
                 }
             }
 
         });
-}
+    }
 
     private void exoControls() {
         mBtnExoControl.setOnClickListener(new View.OnClickListener() {
@@ -196,38 +222,29 @@ public class ExoPlayer extends AppCompatActivity {
         super.onStart();
         Log.d("activity", "onStart: ");
         initailizePlayer();
-
+//
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         hideSystemUi();
+        initailizePlayer();
         Log.d("activity", "onResume: ");
-
-        if (player != null) {
-            updateThePlayer();
-            seekBarPosition();
-            initailizePlayer();
-
-        } else {
-            handler.removeCallbacks(updatePlayer);
-        }
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("activity", "onPause: "+player.getCurrentPosition());
+        Log.d("activity", "onPause: " + player.getCurrentPosition());
         playbackPosition = player.getCurrentPosition();
-        releasePlayer();
+        getPosition();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        releasePlayer();
+        getPosition();
         Log.d("activity", "onStop: ");
     }
 
@@ -235,8 +252,7 @@ public class ExoPlayer extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d("activity", "onDestroy: ");
-        player.release();
-        player = null;
+       releasePlayer();
     }
 
     private void initailizePlayer() {
@@ -244,16 +260,19 @@ public class ExoPlayer extends AppCompatActivity {
                 new DefaultTrackSelector(), new DefaultLoadControl());
 
         mPlayerView.setPlayer(player);
-        Log.d("position", "releasePlayer: "+playbackPosition);
+        Log.d("position", "releasePlayer: " + playbackPosition);
         if (playbackPosition != 0) {
             player.seekTo(playbackPosition);
             player.setPlayWhenReady(true);
+            mBtnExoControl.setImageResource(R.drawable.exo_pause);
         }
-        Log.d("position", "releasePlayer: "+playbackPosition);
+        Log.d("position", "releasePlayer: " + playbackPosition);
         exoControls();
         playerEventListener();
 //        Log.d(TAG, "initailizePlayer: " + playReady);
 
+        updateThePlayer();
+        seekBarPosition();
 
         handler.postDelayed(updatePlayer, delay);
 
@@ -280,15 +299,21 @@ public class ExoPlayer extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
-    private void releasePlayer() {
+    private void getPosition() {
         if (player != null) {
             handler.removeCallbacks(updatePlayer);
             currentWindow = player.getCurrentWindowIndex();
             playReady = player.getPlayWhenReady();
             Log.d(TAG, "releasePlayer: " + playReady);
+
+
+        }
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
             player.release();
             player = null;
-
         }
     }
 }

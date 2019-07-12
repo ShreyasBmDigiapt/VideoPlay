@@ -17,15 +17,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.source.MediaSource;
@@ -33,10 +37,7 @@ import com.google.android.exoplayer2.source.MediaSource;
 public class MainActivity extends AppCompatActivity {
 
     private static final int GALLERY_REQUEST_CODE = 1;
-    private FrameLayout mMainFrame;
-    private Button mBtnCamera, mBtnGallery;
-
-    private static final String FRAGMENT_DIALOG = "dialog";
+    private ImageButton mBtnCamera, mBtnGallery;
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
 
     private static final String[] VIDEO_PERMISSIONS = {
@@ -47,14 +48,12 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private static final String TAG = "MainActivity1";
-    private Object selectedImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mMainFrame = findViewById(R.id.mainFrame);
         mBtnGallery = findViewById(R.id.btnGallery);
         mBtnCamera = findViewById(R.id.btnCamera);
 
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                transaction.add(R.id.mainFrame, new Camera2VideoFragment());
+                transaction.replace(R.id.mainFrame, new Camera2VideoFragment());
                 transaction.addToBackStack("camera");
                 transaction.commit();
             }
@@ -89,8 +88,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
     // To handle when an image is selected from the browser, add the following to your Activity
 
     @Override
@@ -123,8 +120,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     // And to convert the image URI to the direct file system path of the image file
-
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Boolean shouldShowRequest(String[] permissions) {
