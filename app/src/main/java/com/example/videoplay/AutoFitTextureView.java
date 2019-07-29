@@ -1,6 +1,7 @@
 package com.example.videoplay;
 
 import android.content.Context;
+import android.hardware.camera2.CameraCharacteristics;
 import android.util.AttributeSet;
 import android.view.TextureView;
 
@@ -50,4 +51,5 @@ public class AutoFitTextureView extends TextureView {
             setMeasuredDimension( mRatioWidth * height / mRatioHeight, height );
         }
     }
+
 }

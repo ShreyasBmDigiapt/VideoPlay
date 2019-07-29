@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,11 +14,13 @@ import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.DefaultEventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.decoder.DecoderCounters;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -32,6 +35,8 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.video.VideoListener;
+import com.google.android.exoplayer2.video.VideoRendererEventListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -45,6 +50,7 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -64,7 +70,7 @@ public class ExoPlayer extends AppCompatActivity {
     private Uri uri;
     private String uri1;
     private AppCompatSeekBar mExoSeekBar;
-    private TextView mTvStartPos, mTvEndPos;
+    private TextView mTvStartPos, mTvEndPos, mLandscapeErrorText;
 
     private ImageButton mBtnExoControl;
 
@@ -75,8 +81,10 @@ public class ExoPlayer extends AppCompatActivity {
     private Handler handler;
     private Runnable updatePlayer;
 
+
     private long delay = 500;
     boolean a = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +95,7 @@ public class ExoPlayer extends AppCompatActivity {
         mExoSeekBar = findViewById(R.id.exoSeekBar);
         mTvStartPos = findViewById(R.id.exoStartposition);
         mTvEndPos = findViewById(R.id.exoEndposition);
+        mLandscapeErrorText = findViewById(R.id.landscapeErrorText);
 //        mBtnClick = findViewById(R.id.btnClick);
 
         mPlayerView = findViewById(R.id.exoPlayerView);
@@ -95,10 +104,6 @@ public class ExoPlayer extends AppCompatActivity {
         Log.d(TAG, "onCreate: " + uri1);
 
         handler = new Handler();
-
-//        handler.removeCallbacks(updatePlayer);
-
-        Log.d("activity", "onCreate: ");
     }
 
     @Override
@@ -170,7 +175,12 @@ public class ExoPlayer extends AppCompatActivity {
 
 
     private void playerEventListener() {
+//        player.addListener(listn);
+
         player.addListener(new Player.EventListener() {
+
+
+
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int state) {
 
@@ -210,6 +220,7 @@ public class ExoPlayer extends AppCompatActivity {
                     player.setPlayWhenReady(false);
                     mBtnExoControl.setImageResource(R.drawable.exo_play);
                 } else {
+                    
                     player.setPlayWhenReady(true);
                     mBtnExoControl.setImageResource(R.drawable.exo_pause);
                 }
@@ -220,8 +231,10 @@ public class ExoPlayer extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d("activity", "onStart: ");
+        Log.d("activity", String.format("onStart: "  ));
+
         initailizePlayer();
+
 //
     }
 
@@ -230,8 +243,9 @@ public class ExoPlayer extends AppCompatActivity {
         super.onResume();
         hideSystemUi();
         initailizePlayer();
-        Log.d("activity", "onResume: ");
     }
+
+
 
     @Override
     protected void onPause() {
@@ -267,6 +281,7 @@ public class ExoPlayer extends AppCompatActivity {
             mBtnExoControl.setImageResource(R.drawable.exo_pause);
         }
         Log.d("position", "releasePlayer: " + playbackPosition);
+        landscapeError();
         exoControls();
         playerEventListener();
 //        Log.d(TAG, "initailizePlayer: " + playReady);
@@ -315,5 +330,29 @@ public class ExoPlayer extends AppCompatActivity {
             player.release();
             player = null;
         }
+    }
+
+    private void landscapeError() {
+        mPlayerView.getPlayer().getVideoComponent().addVideoListener(new VideoListener() {
+            @Override
+            public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+                Log.d("1200", "onVideoSizeChanged: "+width+"     "+height);
+                if (width >= height) {
+                    mBtnExoControl.setVisibility(View.GONE);
+                    mExoSeekBar.setVisibility(View.GONE);
+                    mTvEndPos.setVisibility(View.GONE);
+                    mTvStartPos.setVisibility(View.GONE);
+                    mPlayerView.setForeground(getDrawable(R.color.trans_black));
+                    mLandscapeErrorText.setVisibility(View.VISIBLE);
+//                    final AlertDialog.Builder builder = new AlertDialog.Builder(ExoPlayer.this);
+//                    builder.setTitle("Alert!!!").setMessage("Video format is not supported").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialogInterface, int i) {
+//                            dialogInterface.dismiss();
+//                        }
+//                    }).create().show();
+                }
+            }
+        });
     }
 }

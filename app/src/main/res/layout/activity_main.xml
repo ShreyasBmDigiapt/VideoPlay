@@ -18,35 +18,33 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0">
 
-        <LinearLayout
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="@color/white"
-            android:weightSum="2"
-            android:padding="100dp">
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/btnCamera"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="50dp"
+                android:layout_width="150dp"
+                android:layout_height="100dp"
                 android:src="@drawable/main_camera"
                 android:layout_weight="0"
+                android:layout_marginBottom="50dp"
                 android:scaleType="fitCenter"
                 android:background="@drawable/main_images"
-                android:foreground="?android:attr/selectableItemBackground"/>
+                android:foreground="?android:attr/selectableItemBackground" />
 
             <ImageButton
                 android:id="@+id/btnGallery"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="150dp"
+                android:layout_height="100dp"
                 android:src="@drawable/main_gallery"
                 android:layout_weight="0"
                 android:scaleType="fitCenter"
                 android:background="@drawable/main_images"
                 android:foreground="?android:attr/selectableItemBackground"/>
+
         </LinearLayout>
 
 

@@ -16,8 +16,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,6 +32,7 @@ import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.source.MediaSource;
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int GALLERY_REQUEST_CODE = 1;
     private ImageButton mBtnCamera, mBtnGallery;
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
+    private LinearLayout mMainLL;
 
     private static final String[] VIDEO_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -54,8 +58,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+//        mMainLL = findViewById(R.id.mainLL);
+
         mBtnGallery = findViewById(R.id.btnGallery);
         mBtnCamera = findViewById(R.id.btnCamera);
+
+//        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            mMainLL.setOrientation(LinearLayout.HORIZONTAL);
+//        }else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//            mMainLL.setOrientation(LinearLayout.VERTICAL);
+//        }
 
         mBtnCamera.setOnClickListener(new View.OnClickListener() {
             @Override

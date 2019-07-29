@@ -10,6 +10,7 @@ import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -27,6 +28,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -75,12 +77,15 @@ public class Camera2VideoFragment extends Fragment {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
 
+
     static {
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 270);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
     }
+
+    OrientationEventListener listener;
 
     /**
      * An {@link AutoFitTextureView} for camera preview.
@@ -297,24 +302,26 @@ public class Camera2VideoFragment extends Fragment {
 
                     stopRecordingVideo();
                 } else {
-                    if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                        Log.d("playr", "onClick: ");
-                        startRecordingVideo();
-//                        chromometer();
-                        builder.create().dismiss();
-
-                    } else if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        mButtonVideo.setVisibility(View.GONE);
-                        Log.d("playr", "onClick: ");
-                        builder.setTitle("Alert").setMessage("Doesnt support LandScape mode").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                mButtonVideo.setVisibility(View.VISIBLE);
-                            }
-                        });
-                        builder.create().show();
-                    }
+                    startRecordingVideo();
                 }
+//                    if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+//                        Log.d("playr", "onClick: ");
+//                        startRecordingVideo();
+////                        chromometer();
+//                        builder.create().dismiss();
+//
+//                    } else if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+//                        mButtonVideo.setVisibility(View.GONE);
+//                        Log.d("playr", "onClick: ");
+//                        builder.setTitle("Alert").setMessage("Doesnt support LandScape mode").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialogInterface, int i) {
+//                                mButtonVideo.setVisibility(View.VISIBLE);
+//                            }
+//                        });
+//                        builder.create().show();
+//                    }
+//                }
 //
             }
 
@@ -569,6 +576,16 @@ public class Camera2VideoFragment extends Fragment {
     }
 
     private void startRecordingVideo() {
+        listener = new OrientationEventListener(getContext()) {
+            @Override
+            public void onOrientationChanged(int i) {
+                if (i == 90 ) {
+                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                }else {
+                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                }
+            }
+        };
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
         }
@@ -721,6 +738,4 @@ public class Camera2VideoFragment extends Fragment {
         };
 
     }
-
-
 }
